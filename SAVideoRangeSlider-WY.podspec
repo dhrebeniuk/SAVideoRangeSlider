@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "SAVideoRangeSlider-WY"
-  s.version      = "1.0.0"
+  s.version      = "1.0.1"
   s.summary      = "SAVideoRangeSlider-WY"
   s.homepage     = "https://github.com/wyanassert/SAVideoRangeSlider.git"
   s.license      = { :type => "MIT", :file => "LICENSE" }
