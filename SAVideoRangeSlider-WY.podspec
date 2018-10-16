@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.author       = { "Andrei" => "andrei@solovjev.com" }
   s.platform     = :ios, "5.0"
   s.requires_arc = TRUE
-  s.source       = { :git => "https://github.com/andrei200287/SAVideoRangeSlider.git", :tag => s.version.to_s }
+  s.source       = { :git => "https://github.com/andrei200287/SAVideoRangeSlider.git", :tag => "#{s.version}" }
   s.source_files = "SAVideoRangeSlider/*.{h,m}"
   s.frameworks = "MediaPlayer", "AVFoundation", "CoreMedia","QuartzCore"
 end
