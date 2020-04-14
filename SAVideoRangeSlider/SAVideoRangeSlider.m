@@ -326,34 +326,77 @@
 
 #pragma mark - Video
 
+- (UIImage *)cropToBounds:(UIImage *)image size:(CGSize)size {
+    CGImageRef cgImage = image.CGImage;
+    
+    CGSize contextSize = image.size;
+    
+    CGFloat posX = 0.0;
+    CGFloat posY = 0.0;
+    
+    CGFloat cgwidth = contextSize.width;
+    CGFloat cgheight = contextSize.height;
+
+    CGRect rect = CGRectZero;
+    if (contextSize.width > contextSize.height) {
+        posX = (contextSize.width - contextSize.height);
+        posY = 0.0;
+        cgwidth = contextSize.width;
+        cgheight = contextSize.height;
+        
+        rect = CGRectMake(posX*UIScreen.mainScreen.scale, posY*UIScreen.mainScreen.scale, cgwidth*UIScreen.mainScreen.scale, cgheight*UIScreen.mainScreen.scale);
+        
+
+        CGImageRef imageRef = CGImageCreateWithImageInRect(cgImage, rect);
+
+        UIImage *resultImage = [[UIImage alloc] initWithCGImage:imageRef scale:UIScreen.mainScreen.scale orientation:image.imageOrientation];
+
+        return resultImage;
+    }
+    else {
+        return image;
+    }
+    
+
+}
+
 -(void)getMovieFrame{
     
     AVAsset *myAsset = [[AVURLAsset alloc] initWithURL:_videoUrl options:nil];
     self.imageGenerator = [AVAssetImageGenerator assetImageGeneratorWithAsset:myAsset];
-    
-    if ([self isRetina]){
-        self.imageGenerator.maximumSize = CGSizeMake(_bgView.frame.size.width*2, _bgView.frame.size.height*2);
+//
+    if ([self isRetina]) {
+        self.imageGenerator.maximumSize = CGSizeMake(_bgView.frame.size.width*UIScreen.mainScreen.scale, _bgView.frame.size.height*UIScreen.mainScreen.scale);
     } else {
         self.imageGenerator.maximumSize = CGSizeMake(_bgView.frame.size.width, _bgView.frame.size.height);
     }
     
-    int picWidth = 20;
     
+    int picWidth = 20.0;
     // First image
     NSError *error;
     CMTime actualTime;
     CGImageRef halfWayImage = [self.imageGenerator copyCGImageAtTime:kCMTimeZero actualTime:&actualTime error:&error];
     if (halfWayImage != NULL) {
         UIImage *videoScreen;
-        if ([self isRetina]){
-            videoScreen = [[UIImage alloc] initWithCGImage:halfWayImage scale:2.0 orientation:UIImageOrientationUp];
+        if ([self isRetina]) {
+            videoScreen = [[UIImage alloc] initWithCGImage:halfWayImage scale:UIScreen.mainScreen.scale orientation:UIImageOrientationUp];
         } else {
             videoScreen = [[UIImage alloc] initWithCGImage:halfWayImage];
         }
+        
+        videoScreen = [self cropToBounds:videoScreen size:videoScreen.size];
+
         UIImageView *tmp = [[UIImageView alloc] initWithImage:videoScreen];
-        CGRect rect=tmp.frame;
-        rect.size.width=picWidth;
-        tmp.frame=rect;
+        tmp.contentMode = UIViewContentModeScaleAspectFill;
+        CGRect rect = tmp.frame;
+        
+        picWidth = 20.0*UIScreen.mainScreen.scale;
+
+        rect.size.width = picWidth;
+        
+        tmp.frame = rect;
+
         [_bgView addSubview:tmp];
         picWidth = tmp.frame.size.width;
         CGImageRelease(halfWayImage);
@@ -362,7 +405,7 @@
     
     _durationSeconds = CMTimeGetSeconds([myAsset duration]);
     
-    int picsCnt = ceil(_bgView.frame.size.width / picWidth);
+    int picsCnt = ceil(_bgView.frame.size.width / picWidth) + 3;
     
     NSMutableArray *allTimes = [[NSMutableArray alloc] init];
     
@@ -383,21 +426,27 @@
             
             UIImage *videoScreen;
             if ([self isRetina]){
-                videoScreen = [[UIImage alloc] initWithCGImage:halfWayImage scale:2.0 orientation:UIImageOrientationUp];
+                videoScreen = [[UIImage alloc] initWithCGImage:halfWayImage scale:UIScreen.mainScreen.scale orientation:UIImageOrientationUp];
             } else {
                 videoScreen = [[UIImage alloc] initWithCGImage:halfWayImage];
             }
             
-            
+            videoScreen = [self cropToBounds:videoScreen size:videoScreen.size];
             
             UIImageView *tmp = [[UIImageView alloc] initWithImage:videoScreen];
-            
-            
-            
+            tmp.contentMode = UIViewContentModeScaleAspectFill;
+
             CGRect currentFrame = tmp.frame;
+
             currentFrame.origin.x = ii*picWidth;
 
-            currentFrame.size.width=picWidth;
+//            if (currentFrame.size.width > currentFrame.size.height) {
+//                CGFloat horizontalOffset = (tmp.frame.size.width - tmp.frame.size.height);
+//                currentFrame.origin.x = currentFrame.origin.x - horizontalOffset;
+//                currentFrame.size.width = currentFrame.size.height;
+//            }
+
+            currentFrame.size.width = picWidth;
             prefreWidth+=currentFrame.size.width;
             
             if( i == picsCnt-1){
@@ -415,6 +464,7 @@
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [_bgView addSubview:tmp];
+                _bgView.clipsToBounds = YES;
             });
             
             
@@ -449,7 +499,7 @@
                                                       
                                                       UIImage *videoScreen;
                                                       if ([self isRetina]){
-                                                          videoScreen = [[UIImage alloc] initWithCGImage:image scale:2.0 orientation:UIImageOrientationUp];
+                                                          videoScreen = [[UIImage alloc] initWithCGImage:image scale:UIScreen.mainScreen.scale orientation:UIImageOrientationUp];
                                                       } else {
                                                           videoScreen = [[UIImage alloc] initWithCGImage:image];
                                                       }
@@ -562,7 +612,7 @@
 -(BOOL)isRetina{
     return ([[UIScreen mainScreen] respondsToSelector:@selector(displayLinkWithTarget:selector:)] &&
             
-            ([UIScreen mainScreen].scale == 2.0));
+            ([UIScreen mainScreen].scale > 1.0));
 }
 
 
