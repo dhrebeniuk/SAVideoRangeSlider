@@ -27,4 +27,6 @@
 
 @interface SASliderRight : UIView
 
+@property (nonatomic) UIColor* mainColor;
+
 @end

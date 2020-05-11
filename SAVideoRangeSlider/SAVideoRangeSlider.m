@@ -51,6 +51,10 @@
     self = [super initWithFrame:frame];
     if (self) {
         
+        _visualizationState = SAVideoRangeSliderNormal;
+        _normalColor = [UIColor whiteColor];
+        _warningColor = [UIColor yellowColor];
+        
         _frame_width = frame.size.width;
         
         int thumbWidth = ceil(frame.size.width*0.05);
@@ -64,12 +68,12 @@
         
         
         _topBorder = [[UIView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, SLIDER_BORDERS_SIZE)];
-        _topBorder.backgroundColor = [UIColor colorWithRed: 0.996 green: 0.951 blue: 0.502 alpha: 1];
+        _topBorder.backgroundColor = _normalColor;
         [self addSubview:_topBorder];
         
         
         _bottomBorder = [[UIView alloc] initWithFrame:CGRectMake(0, frame.size.height-SLIDER_BORDERS_SIZE, frame.size.width, SLIDER_BORDERS_SIZE)];
-        _bottomBorder.backgroundColor = [UIColor colorWithRed: 0.992 green: 0.902 blue: 0.004 alpha: 1];
+        _bottomBorder.backgroundColor = _normalColor;
         [self addSubview:_bottomBorder];
         
         
@@ -99,9 +103,6 @@
         
         _rightPosition = frame.size.width;
         _leftPosition = 0;
-        
-        
-        
         
         _centerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height)];
         _centerView.backgroundColor = [UIColor clearColor];
@@ -141,6 +142,30 @@
     return self;
 }
 
+- (void)setVisualizationState:(VisualizationState)visualizationState {
+    _visualizationState = visualizationState;
+    
+    [self updateColor];
+}
+
+- (void)updateColor {
+    switch (self.visualizationState) {
+        case SAVideoRangeSliderNormal:
+            self.topBorder.backgroundColor = self.normalColor;
+            self.bottomBorder.backgroundColor = self.normalColor;
+            self.leftThumb.mainColor = self.normalColor;
+            self.rightThumb.mainColor = self.normalColor;
+            break;
+        case SAVideoRangeSliderWarning:
+            self.topBorder.backgroundColor = self.warningColor;
+            self.bottomBorder.backgroundColor = self.warningColor;
+            self.leftThumb.mainColor = self.warningColor;
+            self.rightThumb.mainColor = self.warningColor;
+            break;
+    }
+    
+    [self setNeedsDisplay];
+}
 
 -(void)setPopoverBubbleSize: (CGFloat) width height:(CGFloat)height{
     
@@ -170,10 +195,10 @@
 }
 
 
-- (void)delegateNotification
+- (void)delegateNotification:(BOOL)isMinimulDuration
 {
-    if ([_delegate respondsToSelector:@selector(videoRange:didChangeLeftPosition:rightPosition:)]){
-        [_delegate videoRange:self didChangeLeftPosition:self.leftPosition rightPosition:self.rightPosition];
+    if ([_delegate respondsToSelector:@selector(videoRange:didChangeLeftPosition:rightPosition:isMinimulDuration:)]){
+        [_delegate videoRange:self didChangeLeftPosition:self.leftPosition rightPosition:self.rightPosition isMinimulDuration:isMinimulDuration];
     }
     
 }
@@ -189,6 +214,8 @@
         
         CGPoint translation = [gesture translationInView:self];
         
+        BOOL isMinimumDuration = NO;
+        
         _leftPosition += translation.x;
         if (_leftPosition < 0) {
             _leftPosition = 0;
@@ -200,13 +227,18 @@
             ((self.minGap > 0) && (self.rightPosition-self.leftPosition < self.minGap))
             ){
             _leftPosition -= translation.x;
+            
+            isMinimumDuration = YES;
         }
+     
         
         [gesture setTranslation:CGPointZero inView:self];
         
         [self setNeedsLayout];
         
-        [self delegateNotification];
+        if (!CGPointEqualToPoint(translation, CGPointZero)) {
+            [self delegateNotification: isMinimumDuration];
+        }
         
     }
     
@@ -226,6 +258,8 @@
         
         
         CGPoint translation = [gesture translationInView:self];
+        BOOL isMinimumDuration = NO;
+
         _rightPosition += translation.x;
         if (_rightPosition < 0) {
             _rightPosition = 0;
@@ -237,12 +271,14 @@
         
         if (_rightPosition-_leftPosition <= 0){
             _rightPosition -= translation.x;
+            isMinimumDuration = YES;
         }
         
         if ((_rightPosition-_leftPosition <= _leftThumb.frame.size.width+_rightThumb.frame.size.width) ||
             ((self.maxGap > 0) && (self.rightPosition-self.leftPosition > self.maxGap)) ||
             ((self.minGap > 0) && (self.rightPosition-self.leftPosition < self.minGap))){
             _rightPosition -= translation.x;
+            isMinimumDuration = YES;
         }
         
         
@@ -250,7 +286,9 @@
         
         [self setNeedsLayout];
         
-        [self delegateNotification];
+        if (!CGPointEqualToPoint(translation, CGPointZero)) {
+            [self delegateNotification: isMinimumDuration];
+        }
         
     }
     
@@ -272,12 +310,16 @@
         
         CGPoint translation = [gesture translationInView:self];
         
+        BOOL isMinimumDuration = NO;
+
         _leftPosition += translation.x;
         _rightPosition += translation.x;
         
         if (_rightPosition > _frame_width || _leftPosition < 0){
             _leftPosition -= translation.x;
             _rightPosition -= translation.x;
+            
+            isMinimumDuration = YES;
         }
         
         
@@ -285,7 +327,7 @@
         
         [self setNeedsLayout];
         
-        [self delegateNotification];
+        [self delegateNotification: isMinimumDuration];
         
     }
     
@@ -566,10 +608,10 @@
                      }
                      completion:nil];
     
-    if ([_delegate respondsToSelector:@selector(videoRange:didGestureStateEndedLeftPosition:rightPosition:)]){
-        [_delegate videoRange:self didGestureStateEndedLeftPosition:self.leftPosition rightPosition:self.rightPosition];
-        
-    }
+//    if ([_delegate respondsToSelector:@selector(videoRange:didGestureStateEndedLeftPosition:rightPosition:hasChanges:)]){
+//        [_delegate videoRange:self didGestureStateEndedLeftPosition:self.leftPosition rightPosition:self.rightPosition hasChanges:YES];
+//        
+//    }
 }
 
 

@@ -31,6 +31,11 @@
 #import "SASliderRight.h"
 #import "SAResizibleBubble.h"
 
+typedef NS_ENUM(NSUInteger, VisualizationState) {
+    SAVideoRangeSliderNormal,
+    SAVideoRangeSliderWarning
+};
+
 
 @protocol SAVideoRangeSliderDelegate;
 
@@ -50,6 +55,10 @@
 - (id)initWithFrame:(CGRect)frame videoUrl:(NSURL *)videoUrl;
 - (void)setPopoverBubbleSize: (CGFloat) width height:(CGFloat)height;
 
+@property (nonatomic) UIColor* normalColor;
+@property (nonatomic) UIColor* warningColor;
+
+@property (nonatomic) VisualizationState visualizationState;
 
 @end
 
@@ -58,10 +67,7 @@
 
 @optional
 
-- (void)videoRange:(SAVideoRangeSlider *)videoRange didChangeLeftPosition:(CGFloat)leftPosition rightPosition:(CGFloat)rightPosition;
-
-- (void)videoRange:(SAVideoRangeSlider *)videoRange didGestureStateEndedLeftPosition:(CGFloat)leftPosition rightPosition:(CGFloat)rightPosition;
-
+- (void)videoRange:(SAVideoRangeSlider *)videoRange didChangeLeftPosition:(CGFloat)leftPosition rightPosition:(CGFloat)rightPosition isMinimulDuration:(BOOL)isMinimulDuration;
 
 @end
 

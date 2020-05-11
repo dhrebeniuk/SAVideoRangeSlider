@@ -31,11 +31,16 @@
 {
     self = [super initWithFrame:frame];
     if (self) {
-        // Initialization code
+        _mainColor = [UIColor whiteColor];
     }
     return self;
 }
 
+- (void)setMainColor:(UIColor *)mainColor {
+    _mainColor = mainColor;
+    
+    [self setNeedsDisplay];
+}
 
 
 - (void)drawRect:(CGRect)rect
